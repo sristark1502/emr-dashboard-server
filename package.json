@@ -1,0 +1,8 @@
+{
+  "name": "emr-dashboard-server",
+  "version": "1.0.0",
+  "description": "EMR Tap Changers Dashboard with Daily Auto-Email",
+  "dependencies": {
+    "nodemailer": "^6.9.0"
+  }
+}

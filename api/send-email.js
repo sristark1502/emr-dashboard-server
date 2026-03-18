@@ -1,26 +1,41 @@
 const nodemailer = require('nodemailer');
 
-// ===== COMPLAINT DATA =====
-// This is your complaint data - update this when complaints change
-// OR later we can connect to Google Sheets API
-const complaints = [
-  {id:1,serialNo:'EMR-GJ-2026-001',companyName:'MEIDEN',location:'Deesa',customerName:'Krishna Reddy',jobSerialNo:'108781',issueDescription:'OLTC LEAKAGE & OLTC DM ADS ISSUE',actionTaken:'PLANED FOR SITE',status:'Complete',plannedDate:'2025-09-30',completedDate:'',engineerAssigned:'Vignesh',materialReq:''},
-  {id:2,serialNo:'EMR-GJ-2026-002',companyName:'AMNS',location:'Surat',customerName:'Tbea',jobSerialNo:'507805',issueDescription:'OLTC LEAKAGE',actionTaken:'Actions Taken',status:'Complete',plannedDate:'2025-09-25',completedDate:'2025-09-27',engineerAssigned:'Vignesh',materialReq:''},
-  {id:3,serialNo:'EMR-GJ-2026-003',companyName:'ROYAL ELECTRIC',location:'Adipur',customerName:'Manish',jobSerialNo:'507681',issueDescription:'TPI ISSUE',actionTaken:'PLANED FOR SITE',status:'Complete',plannedDate:'2025-11-03',completedDate:'',engineerAssigned:'Vignesh',materialReq:''},
-  {id:12,serialNo:'EMR-GJ-2026-012',companyName:'Hitachi',location:'Makarpura',customerName:'Gurupreet',jobSerialNo:'',issueDescription:'Adani Job Door Hinges',actionTaken:'Planed',status:'Pending',plannedDate:'2025-10-09',completedDate:'',engineerAssigned:'Vignesh',materialReq:'waiting for material'},
-  {id:35,serialNo:'EMR-GJ-2026-035',companyName:'VOLTAMP',location:'Savli',customerName:'Bhargav',jobSerialNo:'',issueDescription:'DM S8 SWITCH LIVER ISSUE',actionTaken:'PLANED',status:'Complete',plannedDate:'',completedDate:'',engineerAssigned:'Vignesh',materialReq:'WAITING FOR THE S8 SWITCH LIVER MATERIAL'},
-  {id:39,serialNo:'EMR-GJ-2026-039',companyName:'Schneider',location:'Halol',customerName:'Vipin',jobSerialNo:'',issueDescription:'CONDENSER ISSUE MOST PRIORITY',actionTaken:'PLANED',status:'Complete',plannedDate:'2025-12-15',completedDate:'',engineerAssigned:'Vignesh',materialReq:'Waiting for the Condenser Ring Material'},
-  {id:41,serialNo:'EMR-GJ-2026-041',companyName:'TBEA',location:'Karjan',customerName:'Kedar Kulkarni',jobSerialNo:'',issueDescription:'DM TBX2 SHAFT ISSUE',actionTaken:'Planed',status:'Complete',plannedDate:'',completedDate:'',engineerAssigned:'Vignesh',materialReq:'Waiting For material that The TBX2 Length Shaft Nos 2'},
-  {id:49,serialNo:'EMR-GJ-2026-049',companyName:'Atlanta',location:'Vadod',customerName:'Gowrang',jobSerialNo:'',issueDescription:'Mechanical Fuse Damge issue',actionTaken:'Planed',status:'Complete',plannedDate:'',completedDate:'',engineerAssigned:'Vignesh',materialReq:'Waiting For Mechanical Fuse Nos 1'},
-  {id:53,serialNo:'EMR-GJ-2026-053',companyName:'Vidyut',location:'Himmat Nagar',customerName:'Yuvaraj',jobSerialNo:'',issueDescription:'L- TYPE BCD ISSUE',actionTaken:'PLANED',status:'Complete',plannedDate:'2026-01-03',completedDate:'',engineerAssigned:'Vignesh',materialReq:'Waiting For AVR OLD MODEL NOS 1'},
-  {id:55,serialNo:'EMR-GJ-2026-055',companyName:'Tula Trans',location:'Surat',customerName:'Nishrang',jobSerialNo:'',issueDescription:'L- Type OLTC ISSUE',actionTaken:'PLANED',status:'Complete',plannedDate:'2026-01-09',completedDate:'',engineerAssigned:'Vignesh',materialReq:'Waiting For Moving Contacter Assembly'},
-  {id:56,serialNo:'EMR-GJ-2026-056',companyName:'Atlanta',location:'Anand',customerName:'Dharshan',jobSerialNo:'',issueDescription:'D- Type Condenser ring Broken',actionTaken:'Planed',status:'Complete',plannedDate:'',completedDate:'',engineerAssigned:'Vignesh',materialReq:'Waiting for The Condenser Ring Material'},
-  {id:74,serialNo:'EMR-GJ-2026-074',companyName:'T-Power',location:'Morbi',customerName:'Subash',jobSerialNo:'',issueDescription:'Tpi Not Working',actionTaken:'Planed',status:'Pending',plannedDate:'',completedDate:'',engineerAssigned:'Vignesh',materialReq:''},
-  {id:85,serialNo:'EMR-GJ-2026-085',companyName:'GETCO',location:'Tharad',customerName:'',jobSerialNo:'',issueDescription:'TRANSFORMER TRIP',actionTaken:'PLANED',status:'Pending',plannedDate:'',completedDate:'',engineerAssigned:'Vignesh',materialReq:'Waiting for materials'},
-  {id:86,serialNo:'EMR-GJ-2026-086',companyName:'Voltamp',location:'Halol',customerName:'Jhonny',jobSerialNo:'',issueDescription:'DM Issue',actionTaken:'Planed',status:'Pending',plannedDate:'',completedDate:'',engineerAssigned:'Vignesh',materialReq:'Waiting For Returning Spring Material'},
-  {id:89,serialNo:'EMR-GJ-2026-089',companyName:'Ak Transformer',location:'',customerName:'Kushal Sir',jobSerialNo:'',issueDescription:'End Limit Issue',actionTaken:'Planed',status:'Pending',plannedDate:'',completedDate:'',engineerAssigned:'Vignesh',materialReq:''},
-  {id:90,serialNo:'EMR-GJ-2026-090',companyName:'220 KV DHANERA SS GETCO',location:'Dhanera',customerName:'',jobSerialNo:'',issueDescription:'job Continues Running',actionTaken:'Planed',status:'Pending',plannedDate:'',completedDate:'',engineerAssigned:'Vignesh',materialReq:''},
-];
+// ===== GOOGLE SHEETS CONFIG =====
+const SHEET_ID = '1APzFDrFhKW4SqUmbwNyAyG723Gmg2zNsk95_6RDiRws';
+const API_KEY = 'AIzaSyBecbJU49RN53QO2POXTQKjvHZ3gkPnsEg';
+const SHEET_NAME = 'Service Report';
+
+// ===== LOAD COMPLAINTS FROM GOOGLE SHEETS =====
+async function loadComplaints() {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME)}!A1:N500?key=${API_KEY}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Google Sheets API error: ' + res.status);
+  const data = await res.json();
+  const rows = data.values || [];
+  if (rows.length < 2) return [];
+
+  const complaints = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r[1] && !r[2]) continue;
+    const status = (r[8] || 'Pending').toString().trim().toUpperCase();
+    complaints.push({
+      serialNo: 'EMR-GJ-2026-' + String(i).padStart(3, '0'),
+      companyName: (r[1] || '').toString().trim(),
+      location: (r[2] || '').toString().trim(),
+      customerName: (r[3] || '').toString().trim(),
+      jobSerialNo: (r[4] || '').toString().trim().replace(/\.0$/, ''),
+      issueDescription: (r[5] || '').toString().trim(),
+      actionTaken: (r[6] || '').toString().trim(),
+      status: status.includes('COMPLETE') ? 'Complete' : 'Pending',
+      plannedDate: (r[9] || '').toString().trim(),
+      completedDate: (r[10] || '').toString().trim(),
+      engineerAssigned: (r[11] || '').toString().trim(),
+      materialReq: (r[12] || '').toString().trim(),
+    });
+  }
+  return complaints;
+}
 
 function generateEmailHTML(pending, materialItems, completeCount, today) {
   let html = `
@@ -111,6 +126,9 @@ function generateEmailHTML(pending, materialItems, completeCount, today) {
 
 module.exports = async function handler(req, res) {
   try {
+    // Load LIVE data from Google Sheets
+    const complaints = await loadComplaints();
+    
     const pending = complaints.filter(c => c.status === 'Pending');
     const materialItems = complaints.filter(c => c.status === 'Pending' && c.materialReq && c.materialReq.trim() !== '');
     const completeCount = complaints.filter(c => c.status === 'Complete').length;
@@ -124,7 +142,7 @@ module.exports = async function handler(req, res) {
 
     // CSV
     const csvHeaders = ["Serial No","Company","Location","Issue","Status","Engineer","Material Req"];
-    const csvRows = [...pending, ...materialItems.filter(m => !pending.find(p => p.id === m.id))];
+    const csvRows = [...pending, ...materialItems.filter(m => !pending.find(p => p.serialNo === m.serialNo))];
     const csv = [csvHeaders, ...csvRows.map(c => [c.serialNo, c.companyName, c.location, c.issueDescription, c.status, c.engineerAssigned, c.materialReq])].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
 
     // Send via Gmail SMTP
@@ -139,7 +157,6 @@ module.exports = async function handler(req, res) {
     await transporter.sendMail({
       from: `"SRI VIGNESH — EMR Tap Changers" <${process.env.GMAIL_USER}>`,
       to: 'vickyykciv15@gmail.com',
-      cc: 'imsrivignesh@gmail.com',
       subject: subject,
       html: htmlBody,
       attachments: [{
@@ -151,7 +168,8 @@ module.exports = async function handler(req, res) {
 
     res.status(200).json({ 
       success: true, 
-      message: `Email sent! Pending: ${pending.length}, Material: ${materialItems.length}`,
+      message: `Email sent! Total: ${complaints.length}, Pending: ${pending.length}, Material: ${materialItems.length}`,
+      source: 'Google Sheets (LIVE data)',
       time: now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
     });
 

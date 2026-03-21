@@ -156,7 +156,7 @@ module.exports = async function handler(req, res) {
 
     await transporter.sendMail({
       from: `"SRI VIGNESH — EMR Tap Changers" <${process.env.GMAIL_USER}>`,
-      to: 'imsrivignesh@gmail.com',
+      to: 'j.sudhakar@emr.global',
       subject: subject,
       html: htmlBody,
       attachments: [{
